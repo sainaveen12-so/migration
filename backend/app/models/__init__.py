@@ -1,0 +1,33 @@
+from app.models.user import (
+    AIResponse,
+    AIUsage,
+    AuditLog,
+    ChatMessage,
+    JobStatus,
+    JobType,
+    MigrationJob,
+    Notification,
+    Project,
+    ProjectFile,
+    ProjectStatus,
+    ProjectVersion,
+    User,
+    UserRole,
+)
+
+__all__ = [
+    "User",
+    "UserRole",
+    "Project",
+    "ProjectStatus",
+    "ProjectFile",
+    "MigrationJob",
+    "JobStatus",
+    "JobType",
+    "ChatMessage",
+    "AIResponse",
+    "AuditLog",
+    "ProjectVersion",
+    "AIUsage",
+    "Notification",
+]

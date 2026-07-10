@@ -1,16 +1,14 @@
-"use client";
-
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import Link from "next/link";
-import { dashboardApi, aiApi } from "@/lib/api";
+import { Link } from "react-router-dom";
+import { dashboardApi } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function SearchPage() {
+export function SearchPage() {
   const [query, setQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -60,7 +58,7 @@ export default function SearchPage() {
                         {result.snippet && <p className="mt-2 text-sm text-gray-600">...{result.snippet}...</p>}
                       </div>
                       {result.project_id && (
-                        <Link href={`/projects/${result.project_id}`} className="text-sm text-blue-600 hover:underline">
+                        <Link to={`/projects/${result.project_id}`} className="text-sm text-blue-600 hover:underline">
                           {result.project_name}
                         </Link>
                       )}

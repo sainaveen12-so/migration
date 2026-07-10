@@ -1,5 +1,3 @@
-"use client";
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { aiApi } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -15,7 +13,7 @@ const PROVIDERS = [
   { id: "ollama", name: "Ollama (Local)", models: ["llama3.2", "codellama", "mistral"] },
 ];
 
-export default function SettingsPage() {
+export function SettingsPage() {
   const { aiProvider, setAiProvider } = useProjectStore();
 
   const { data: providers } = useQuery({

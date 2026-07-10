@@ -1,10 +1,8 @@
-"use client";
-
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { DashboardStats } from "@/components/dashboard/stats";
 
-export default function DashboardPage() {
+export function DashboardPage() {
   return (
     <div className="flex h-screen">
       <Sidebar />

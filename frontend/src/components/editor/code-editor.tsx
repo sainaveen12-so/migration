@@ -1,17 +1,7 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-    </div>
-  ),
-});
+const MonacoEditor = lazy(() => import("@monaco-editor/react"));
 
 interface CodeEditorProps {
   value: string;
@@ -37,6 +27,14 @@ const LANG_MAP: Record<string, string> = {
   yaml: "yaml",
 };
 
+function EditorLoading() {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+    </div>
+  );
+}
+
 export function CodeEditor({ value, language = "python", onChange, readOnly = false, height = "500px" }: CodeEditorProps) {
   const [theme, setTheme] = useState<"vs-dark" | "light">("vs-dark");
 
@@ -51,22 +49,24 @@ export function CodeEditor({ value, language = "python", onChange, readOnly = fa
           Toggle Theme
         </button>
       </div>
-      <MonacoEditor
-        height={height}
-        language={LANG_MAP[language] || language}
-        value={value}
-        onChange={onChange}
-        theme={theme}
-        options={{
-          readOnly,
-          minimap: { enabled: true },
-          fontSize: 14,
-          lineNumbers: "on",
-          scrollBeyondLastLine: false,
-          automaticLayout: true,
-          wordWrap: "on",
-        }}
-      />
+      <Suspense fallback={<EditorLoading />}>
+        <MonacoEditor
+          height={height}
+          language={LANG_MAP[language] || language}
+          value={value}
+          onChange={onChange}
+          theme={theme}
+          options={{
+            readOnly,
+            minimap: { enabled: true },
+            fontSize: 14,
+            lineNumbers: "on",
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            wordWrap: "on",
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

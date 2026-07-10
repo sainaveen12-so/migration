@@ -1,11 +1,9 @@
-"use client";
-
 import { useQuery } from "@tanstack/react-query";
 import { FolderKanban, FileCode, GitBranch, Cpu, DollarSign, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
 import { dashboardApi } from "@/lib/api";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 
 export function DashboardStats() {
   const { data: stats, isLoading } = useQuery({
@@ -74,7 +72,7 @@ export function DashboardStats() {
               {stats.recent_projects.map((project: { id: number; name: string; status: string; updated_at: string }) => (
                 <Link
                   key={project.id}
-                  href={`/projects/${project.id}`}
+                  to={`/projects/${project.id}`}
                   className="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900"
                 >
                   <div>

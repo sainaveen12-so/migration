@@ -1,8 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Code2 } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
@@ -11,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function LoginPage() {
-  const router = useRouter();
+export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from || "/dashboard";
   const { setTokens } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +25,7 @@ export default function LoginPage() {
     try {
       const { data } = await authApi.login(email, password);
       setTokens(data.access_token, data.refresh_token);
-      router.push("/dashboard");
+      navigate(from, { replace: true });
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       setError(axiosErr.response?.data?.detail || "Login failed");
@@ -65,11 +64,11 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            <Link href="/forgot-password" className="text-blue-600 hover:underline">Forgot password?</Link>
+            <Link to="/forgot-password" className="text-blue-600 hover:underline">Forgot password?</Link>
           </div>
           <div className="mt-2 text-center text-sm text-gray-500">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-blue-600 hover:underline">Sign up</Link>
+            <Link to="/signup" className="text-blue-600 hover:underline">Sign up</Link>
           </div>
         </CardContent>
       </Card>

@@ -1,8 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Code2 } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
@@ -11,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function SignupPage() {
-  const router = useRouter();
+export function SignupPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from || "/dashboard";
   const { setTokens } = useAuthStore();
   const [form, setForm] = useState({ email: "", username: "", password: "", full_name: "" });
   const [error, setError] = useState("");
@@ -25,7 +24,7 @@ export default function SignupPage() {
     try {
       const { data } = await authApi.register(form);
       setTokens(data.access_token, data.refresh_token);
-      router.push("/dashboard");
+      navigate(from, { replace: true });
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       setError(axiosErr.response?.data?.detail || "Registration failed");
@@ -69,7 +68,7 @@ export default function SignupPage() {
           </form>
           <div className="mt-4 text-center text-sm text-gray-500">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 hover:underline">Sign in</Link>
+            <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
           </div>
         </CardContent>
       </Card>

@@ -1,19 +1,17 @@
-"use client";
-
 import { useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Upload, GitBranch as GithubIcon, Play, Download, FileCode, MessageSquare,
   GitBranch, Bug, Wrench, FileText, TestTube, Loader2, Sparkles,
 } from "lucide-react";
 import { projectsApi, aiApi } from "@/lib/api";
+import { pollJobUntilDone } from "@/lib/job-polling";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { CodeEditor, DiffViewer } from "@/components/editor/code-editor";
 import { AIChat } from "@/components/chat/ai-chat";
 import { DiagramViewer } from "@/components/diagrams/diagram-viewer";
@@ -22,16 +20,16 @@ const MIGRATION_OPTIONS = [
   { label: "Java → FastAPI", source: "java", target: "python", framework: "fastapi" },
   { label: "Spring Boot → FastAPI", source: "spring_boot", target: "python", framework: "fastapi" },
   { label: "Flask → FastAPI", source: "flask", target: "python", framework: "fastapi" },
-  { label: "React → Next.js", source: "react", target: "typescript", framework: "nextjs" },
+  { label: "React → Vite", source: "react", target: "typescript", framework: "vite" },
   { label: "Angular → React", source: "angular", target: "typescript", framework: "react" },
   { label: "JavaScript → TypeScript", source: "javascript", target: "typescript", framework: null },
   { label: ".NET → Python", source: "csharp", target: "python", framework: "fastapi" },
   { label: "PHP → Node.js", source: "php", target: "javascript", framework: "nodejs" },
 ];
 
-export default function ProjectDetailPage() {
-  const params = useParams();
-  const projectId = Number(params.id);
+export function ProjectDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const projectId = Number(id);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +39,7 @@ export default function ProjectDetailPage() {
   const [showGithub, setShowGithub] = useState(false);
   const [migrationType, setMigrationType] = useState(MIGRATION_OPTIONS[0]);
   const [explainResult, setExplainResult] = useState<Record<string, unknown> | null>(null);
+  const [jobProgress, setJobProgress] = useState<number | null>(null);
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
@@ -48,6 +47,7 @@ export default function ProjectDetailPage() {
       const { data } = await projectsApi.get(projectId);
       return data;
     },
+    enabled: !Number.isNaN(projectId),
   });
 
   const { data: files = [] } = useQuery({
@@ -56,6 +56,7 @@ export default function ProjectDetailPage() {
       const { data } = await projectsApi.getFiles(projectId);
       return data;
     },
+    enabled: !Number.isNaN(projectId),
   });
 
   const { data: selectedFile } = useQuery({
@@ -85,6 +86,27 @@ export default function ProjectDetailPage() {
     enabled: activeTab === "diagrams" && !!analysis,
   });
 
+  const invalidateProjectData = () => {
+    queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    queryClient.invalidateQueries({ queryKey: ["project-files", projectId] });
+    queryClient.invalidateQueries({ queryKey: ["project-analysis", projectId] });
+    queryClient.invalidateQueries({ queryKey: ["project-diagrams", projectId] });
+  };
+
+  const runJobMutation = async (
+    request: () => Promise<{ data: { job_id?: number } }>
+  ) => {
+    const { data } = await request();
+    if (data.job_id) {
+      setJobProgress(0);
+      await pollJobUntilDone(data.job_id, {
+        onProgress: (job) => setJobProgress(job.progress),
+      });
+      setJobProgress(null);
+    }
+    return data;
+  };
+
   const uploadMutation = useMutation({
     mutationFn: (file: File) => projectsApi.upload(projectId, file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project", projectId] }),
@@ -99,18 +121,20 @@ export default function ProjectDetailPage() {
   });
 
   const analyzeMutation = useMutation({
-    mutationFn: () => projectsApi.analyze(projectId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project", projectId] }),
+    mutationFn: () => runJobMutation(() => projectsApi.analyze(projectId)),
+    onSuccess: invalidateProjectData,
   });
 
   const migrateMutation = useMutation({
     mutationFn: () =>
-      projectsApi.migrate(projectId, {
-        target_language: migrationType.target,
-        target_framework: migrationType.framework || undefined,
-        migration_type: migrationType.label,
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project", projectId] }),
+      runJobMutation(() =>
+        projectsApi.migrate(projectId, {
+          target_language: migrationType.target,
+          target_framework: migrationType.framework || undefined,
+          migration_type: migrationType.label,
+        })
+      ),
+    onSuccess: invalidateProjectData,
   });
 
   const explainMutation = useMutation({
@@ -170,6 +194,12 @@ export default function ProjectDetailPage() {
             </div>
           }
         />
+
+        {jobProgress !== null && (
+          <div className="border-b border-blue-200 bg-blue-50 px-6 py-2 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
+            Job in progress… {jobProgress}%
+          </div>
+        )}
 
         <input
           ref={fileInputRef}

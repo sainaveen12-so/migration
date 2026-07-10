@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -8,6 +8,9 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -38,6 +41,8 @@ api.interceptors.response.use(
           localStorage.removeItem("refresh_token");
           window.location.href = "/login";
         }
+      } else {
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);
@@ -65,9 +70,7 @@ export const projectsApi = {
   upload: (id: number, file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post(`/projects/${id}/upload`, form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post(`/projects/${id}/upload`, form);
   },
   cloneGithub: (id: number, data: { github_url: string; branch?: string; name?: string }) =>
     api.post(`/projects/${id}/clone-github`, data),

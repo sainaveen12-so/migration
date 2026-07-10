@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { projectsApi } from "@/lib/api";
@@ -24,7 +22,7 @@ interface Project {
   updated_at: string;
 }
 
-export default function ProjectsPage() {
+export function ProjectsPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [newProject, setNewProject] = useState({ name: "", description: "" });
@@ -114,7 +112,7 @@ export default function ProjectsPage() {
                 <Card key={project.id} className="transition-shadow hover:shadow-md">
                   <CardHeader className="flex flex-row items-start justify-between">
                     <div>
-                      <Link href={`/projects/${project.id}`}>
+                      <Link to={`/projects/${project.id}`}>
                         <CardTitle className="hover:text-blue-600">{project.name}</CardTitle>
                       </Link>
                       <p className="text-sm text-gray-500">{project.description}</p>

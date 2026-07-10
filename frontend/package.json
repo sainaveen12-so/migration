@@ -32,6 +32,10 @@
     "tailwind-merge": "^3.6.0",
     "zustand": "^5.0.14"
   },
+  "optionalDependencies": {
+    "@emnapi/core": "1.11.2",
+    "@emnapi/runtime": "1.11.2"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

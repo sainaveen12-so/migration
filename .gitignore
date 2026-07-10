@@ -47,3 +47,4 @@ data/
 *.pem
 *.key
 credentials.json
+package-lock.json
